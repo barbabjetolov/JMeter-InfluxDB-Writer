@@ -59,6 +59,9 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 	 * Scheduler for periodic metric aggregation.
 	 */
 	private ScheduledExecutorService scheduler;
+	
+	private long testStartTime;
+	
 
 	/**
 	 * Name of the test.
@@ -133,12 +136,42 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 			if ((null != regexForSamplerList && sampleResult.getSampleLabel().matches(regexForSamplerList)) || samplersToFilter.contains(sampleResult.getSampleLabel())) {
 				Point point = Point.measurement(RequestMeasurement.MEASUREMENT_NAME).time(
 						System.currentTimeMillis() * ONE_MS_IN_NANOSECONDS + getUniqueNumberForTheSamplerThread(), TimeUnit.NANOSECONDS)
+	
 						.tag(RequestMeasurement.Tags.REQUEST_NAME, sampleResult.getSampleLabel())
-                                                .addField(RequestMeasurement.Fields.ERROR_COUNT, sampleResult.getErrorCount())
+                        .addField(RequestMeasurement.Fields.ERROR_COUNT, sampleResult.getErrorCount())
 						.addField(RequestMeasurement.Fields.THREAD_NAME, sampleResult.getThreadName())
 						.tag(RequestMeasurement.Tags.RUN_ID, runId)
 						.tag(RequestMeasurement.Tags.TEST_NAME, testName)
+						
 						.addField(RequestMeasurement.Fields.NODE_NAME, nodeName)
+						.addField(RequestMeasurement.Fields.RESPONSE_SIZE, sampleResult.getBytesAsLong())
+						.addField(RequestMeasurement.Tags.RESPONSE_CODE, sampleResult.getResponseCode())
+						.addField(RequestMeasurement.Fields.RESPONSE_LATENCY, sampleResult.getLatency())
+						.addField(RequestMeasurement.Fields.RESPONSE_CONNECT_TIME, sampleResult.getConnectTime())
+						.addField(RequestMeasurement.Fields.RESPONSE_TIME, sampleResult.getTime()).build();
+				influxDB.write(influxDBConfig.getInfluxDatabase(), influxDBConfig.getInfluxRetentionPolicy(), point);
+			}
+		}
+		
+		
+		for(SampleResult sampleResult: allSampleResults) {
+            getUserMetrics().add(sampleResult);
+
+			if ((null != regexForSamplerList && sampleResult.getSampleLabel().matches(regexForSamplerList)) || samplersToFilter.contains(sampleResult.getSampleLabel())) {
+				Point point = Point.measurement(RequestMeasurement.HISTORY_MEASUTEMENT_NAME).time(
+						(System.currentTimeMillis() - testStartTime) * ONE_MS_IN_NANOSECONDS + getUniqueNumberForTheSamplerThread(), TimeUnit.NANOSECONDS)
+	
+						.tag(RequestMeasurement.Tags.REQUEST_NAME, sampleResult.getSampleLabel())
+                        .addField(RequestMeasurement.Fields.ERROR_COUNT, sampleResult.getErrorCount())
+						.addField(RequestMeasurement.Fields.THREAD_NAME, sampleResult.getThreadName())
+						.tag(RequestMeasurement.Tags.RUN_ID, runId)
+						.tag(RequestMeasurement.Tags.TEST_NAME, testName)
+						
+						.addField(RequestMeasurement.Fields.NODE_NAME, nodeName)
+						.addField(RequestMeasurement.Fields.RESPONSE_SIZE, sampleResult.getBytesAsLong())
+						.addField(RequestMeasurement.Tags.RESPONSE_CODE, sampleResult.getResponseCode())
+						.addField(RequestMeasurement.Fields.RESPONSE_LATENCY, sampleResult.getLatency())
+						.addField(RequestMeasurement.Fields.RESPONSE_CONNECT_TIME, sampleResult.getConnectTime())
 						.addField(RequestMeasurement.Fields.RESPONSE_TIME, sampleResult.getTime()).build();
 				influxDB.write(influxDBConfig.getInfluxDatabase(), influxDBConfig.getInfluxRetentionPolicy(), point);
 			}
@@ -165,6 +198,7 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 
 	@Override
 	public void setupTest(BackendListenerContext context) throws Exception {
+		testStartTime = System.currentTimeMillis();
 		testName = context.getParameter(KEY_TEST_NAME, "Test");
                 runId = context.getParameter(KEY_RUN_ID,"R001"); //Will be used to compare performance of R001, R002, etc of 'Test'
 		randomNumberGenerator = new Random();

@@ -12,6 +12,8 @@ public interface RequestMeasurement {
 	 * Measurement name.
 	 */
 	String MEASUREMENT_NAME = "requestsRaw";
+	
+	String HISTORY_MEASUTEMENT_NAME = "requestsHistoryRaw";
 
 	/**
 	 * Tags.
@@ -34,6 +36,10 @@ public interface RequestMeasurement {
                  * Test name field
                  */  
                 String TEST_NAME = "testName";
+                
+                String RESPONSE_CODE = "responseCode";
+                
+                
 	}
 
 	/**
@@ -62,5 +68,16 @@ public interface RequestMeasurement {
 		 * Node name field
 		 */
 		String NODE_NAME = "nodeName";
+		
+		String RESPONSE_SIZE ="responseSize";
+		
+		String RESPONSE_LATENCY="responseLatency";
+		
+		String RESPONSE_CONNECT_TIME ="responseConnectTime";
+		
+		
+		
+		
+		
 	}
 }
