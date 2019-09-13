@@ -7,3 +7,6 @@ Plugin for JMeter that allows to write load test data on-the-fly to influxDB.
  - Download the [JMeter-InfluxDB-Writer](https://github.com/sfakrudeen78/JMeter-InfluxDB-Writer/releases/download/v-1.2.2/JMeter-InfluxDB-Writer-plugin-1.2.2.jar) plugin.
  - Place the jar in JMETER_HOME/lib/ext directory and start the Jmeter.
  - Once the JMeter is restarted, Go to Test Plan > Add > Listener > Backend Listener
+ ![Sample](Screenshot1.png)
+ - In the backend listener select rocks.nt.apm.jmeter.JmeterInfluxDBBackendListenerClient
+ ![Sample](Screenshot2.png)
