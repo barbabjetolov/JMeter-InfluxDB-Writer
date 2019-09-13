@@ -26,6 +26,12 @@ Plugin for JMeter that allows to write load test data on-the-fly to influxDB.
  
  - Add or mofify value of parameters especially dbname, dbusername, dbpassword.
  ![Sample](Screenshot3.png)
+ - To make sure things are working fine, you can run a test and refer **Jmeter Logs (Log Viewer )**.
+ > You will see the following logs without any error:
+ ```2019-09-13 08:49:52,043 INFO o.a.j.v.b.BackendListener: Backend Listener: Starting worker with class: class rocks.nt.apm.jmeter.JMeterInfluxDBBackendListenerClient and queue capacity: 5000
+2019-09-13 08:49:52,043 INFO o.a.j.v.b.BackendListener: Backend Listener: Started  worker with class: class rocks.nt.apm.jmeter.JMeterInfluxDBBackendListenerClient
+ 2019-09-13 08:49:53,798 INFO r.n.a.j.JMeterInfluxDBBackendListenerClient: Shutting down influxDB scheduler...
+ 2019-09-13 08:49:53,858 INFO r.n.a.j.JMeterInfluxDBBackendListenerClient: influxDB scheduler terminated!```
  
  
  
