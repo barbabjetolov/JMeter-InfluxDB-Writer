@@ -129,29 +129,48 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 				}
 			}
         }
+		
+		// requestsRaw
 
 		for(SampleResult sampleResult: allSampleResults) {
             getUserMetrics().add(sampleResult);
 
 			if ((null != regexForSamplerList && sampleResult.getSampleLabel().matches(regexForSamplerList)) || samplersToFilter.contains(sampleResult.getSampleLabel())) {
-				Point point = Point.measurement(RequestMeasurement.MEASUREMENT_NAME).time(
-						System.currentTimeMillis() * ONE_MS_IN_NANOSECONDS + getUniqueNumberForTheSamplerThread(), TimeUnit.NANOSECONDS)
+				Point point = Point.measurement(RequestMeasurement.MEASUREMENT_NAME).time(sampleResult.getStartTime(), TimeUnit.MILLISECONDS)
 	
 						.tag(RequestMeasurement.Tags.REQUEST_NAME, sampleResult.getSampleLabel())
                         .addField(RequestMeasurement.Fields.ERROR_COUNT, sampleResult.getErrorCount())
 						.addField(RequestMeasurement.Fields.THREAD_NAME, sampleResult.getThreadName())
 						.tag(RequestMeasurement.Tags.RUN_ID, runId)
 						.tag(RequestMeasurement.Tags.TEST_NAME, testName)
+						.tag("responseCodeTag", sampleResult.getResponseCode())
 						
 						.addField(RequestMeasurement.Fields.NODE_NAME, nodeName)
 						.addField(RequestMeasurement.Fields.RESPONSE_SIZE, sampleResult.getBytesAsLong())
 						.addField(RequestMeasurement.Tags.RESPONSE_CODE, sampleResult.getResponseCode())
 						.addField(RequestMeasurement.Fields.RESPONSE_LATENCY, sampleResult.getLatency())
 						.addField(RequestMeasurement.Fields.RESPONSE_CONNECT_TIME, sampleResult.getConnectTime())
-						.addField(RequestMeasurement.Fields.RESPONSE_TIME, sampleResult.getTime()).build();
+						.addField(RequestMeasurement.Fields.RESPONSE_TIME, sampleResult.getTime())
+						.addField("endTime", sampleResult.getEndTime()).build();
+				
+				
 				influxDB.write(influxDBConfig.getInfluxDatabase(), influxDBConfig.getInfluxRetentionPolicy(), point);
+				
+				
+				point = Point.measurement("responseRaw").time(sampleResult.getStartTime()+sampleResult.getTime()+sampleResult.getConnectTime()+sampleResult.getLatency(), TimeUnit.MILLISECONDS)
+						
+						.tag(RequestMeasurement.Tags.REQUEST_NAME, sampleResult.getSampleLabel())
+						.tag(RequestMeasurement.Tags.RUN_ID, runId)
+						.tag(RequestMeasurement.Tags.TEST_NAME, testName)
+						.tag("responseCodeTag", sampleResult.getResponseCode())								
+						.addField("endTime", sampleResult.getEndTime()).build();
+				
+				
+				influxDB.write(influxDBConfig.getInfluxDatabase(), influxDBConfig.getInfluxRetentionPolicy(), point);
+				
 			}
 		}
+		
 		
 		
 		for(SampleResult sampleResult: allSampleResults) {
@@ -159,20 +178,23 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 
 			if ((null != regexForSamplerList && sampleResult.getSampleLabel().matches(regexForSamplerList)) || samplersToFilter.contains(sampleResult.getSampleLabel())) {
 				Point point = Point.measurement(RequestMeasurement.HISTORY_MEASUTEMENT_NAME).time(
-						(System.currentTimeMillis() - testStartTime) * ONE_MS_IN_NANOSECONDS + getUniqueNumberForTheSamplerThread(), TimeUnit.NANOSECONDS)
+						(sampleResult.getStartTime() - testStartTime) , TimeUnit.MILLISECONDS)
 	
 						.tag(RequestMeasurement.Tags.REQUEST_NAME, sampleResult.getSampleLabel())
                         .addField(RequestMeasurement.Fields.ERROR_COUNT, sampleResult.getErrorCount())
 						.addField(RequestMeasurement.Fields.THREAD_NAME, sampleResult.getThreadName())
 						.tag(RequestMeasurement.Tags.RUN_ID, runId)
 						.tag(RequestMeasurement.Tags.TEST_NAME, testName)
+						.tag("responseCodeTag", sampleResult.getResponseCode())
+						
 						
 						.addField(RequestMeasurement.Fields.NODE_NAME, nodeName)
-						.addField(RequestMeasurement.Fields.RESPONSE_SIZE, sampleResult.getBytesAsLong())
 						.addField(RequestMeasurement.Tags.RESPONSE_CODE, sampleResult.getResponseCode())
+						.addField(RequestMeasurement.Fields.RESPONSE_SIZE, sampleResult.getBytesAsLong())
 						.addField(RequestMeasurement.Fields.RESPONSE_LATENCY, sampleResult.getLatency())
 						.addField(RequestMeasurement.Fields.RESPONSE_CONNECT_TIME, sampleResult.getConnectTime())
 						.addField(RequestMeasurement.Fields.RESPONSE_TIME, sampleResult.getTime()).build();
+				
 				influxDB.write(influxDBConfig.getInfluxDatabase(), influxDBConfig.getInfluxRetentionPolicy(), point);
 			}
 		}
