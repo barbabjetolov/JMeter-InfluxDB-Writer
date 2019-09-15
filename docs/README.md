@@ -38,7 +38,7 @@ Plugin for JMeter that allows to write load test data on-the-fly to influxDB.
 # Configure Grafana to view the collected metrics
 
 The following things need to done to configure Grafana to view the collected metrics from Influx db.
-* Download the following dashboard files and import it in Grafana.
+* Download the following dashboard files and import all the dashboard in Grafana. For more information on how to import dashboard in Grafana refer [here](https://grafana.com/docs/reference/export_import/#importing-a-dashboard).
   * [Main Dashboard](MainDashboard.json)
   * [Response Time Dashboard](ResponseTime.json)
   * [Historic Data Dashboard](HistoricData.json)
