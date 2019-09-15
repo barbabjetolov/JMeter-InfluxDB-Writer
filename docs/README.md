@@ -28,10 +28,29 @@ Plugin for JMeter that allows to write load test data on-the-fly to influxDB.
  ![Sample](Screenshot3.png)
  - To make sure things are working fine, you can run a test and refer **Jmeter Logs (Log Viewer )**.
  > You will see the following logs without any error:
- ```2019-09-13 08:49:52,043 INFO o.a.j.v.b.BackendListener: Backend Listener: Starting worker with class: class rocks.nt.apm.jmeter.JMeterInfluxDBBackendListenerClient and queue capacity: 5000
+ '''2019-09-13 08:49:52,043 INFO o.a.j.v.b.BackendListener: Backend Listener: Starting worker with class: class rocks.nt.apm.jmeter.JMeterInfluxDBBackendListenerClient and queue capacity: 5000
 2019-09-13 08:49:52,043 INFO o.a.j.v.b.BackendListener: Backend Listener: Started  worker with class: class rocks.nt.apm.jmeter.JMeterInfluxDBBackendListenerClient
  2019-09-13 08:49:53,798 INFO r.n.a.j.JMeterInfluxDBBackendListenerClient: Shutting down influxDB scheduler...
- 2019-09-13 08:49:53,858 INFO r.n.a.j.JMeterInfluxDBBackendListenerClient: influxDB scheduler terminated!```
+ 2019-09-13 08:49:53,858 INFO r.n.a.j.JMeterInfluxDBBackendListenerClient: influxDB scheduler terminated!'''
+ 
+ 
+ 
+# Configure Grafana to view the collected metrics
+
+The following things need to done to configure Grafana to view the collected metrics from Influx db.
+* Download the following dashboard files and import it in Grafana.
+  * [Main Dashboard](MainDashboard.json)
+  * [Response Time Dashboard](ResponseTime.json)
+  * [Historic Data Dashboard](HistoricData.json)
+* To know how the dashboard look like refer to the following url:
+  * [Main Dashboard](https://snapshot.raintank.io/dashboard/snapshot/4wgKQWo7g3MkbieYm1VJLJEQey0r2AON)
+  * [Response Time Dashboard](https://snapshot.raintank.io/dashboard/snapshot/6kVtxW54KwbhQjIRY31YBY306OyZuauo)
+  * [Historic Data Dashboard](https://snapshot.raintank.io/dashboard/snapshot/Qw3oF4rUvaQVRwLgGHYRr84FP3zhgtnx)
+* Dashboard Images for reference:
+  * ![Main Dashboard](MainDashboard.png)
+  * ![Response Time Dashboard](ResponseTime.png)
+  * ![Historic Data Dashboard](HistoricData.png) 
+ 
  
  
  
