@@ -13,7 +13,7 @@ public interface RequestMeasurement {
 	 */
 	String MEASUREMENT_NAME = "requestsRaw";
 	
-	String HISTORY_MEASUTEMENT_NAME = "requestsHistoryRaw";
+	String HISTORY_MEASUREMENT_NAME = "requestsHistoryRaw";
 
 	/**
 	 * Tags.
