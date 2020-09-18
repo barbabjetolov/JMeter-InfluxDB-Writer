@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.jmeter.assertions.AssertionResult;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.threads.JMeterContextService;
@@ -24,6 +25,7 @@ import org.influxdb.dto.Point.Builder;
 
 import rocks.nt.apm.jmeter.config.influxdb.InfluxDBConfig;
 import rocks.nt.apm.jmeter.config.influxdb.RequestMeasurement;
+import rocks.nt.apm.jmeter.config.influxdb.SampleMeasurement;
 import rocks.nt.apm.jmeter.config.influxdb.TestStartEndMeasurement;
 import rocks.nt.apm.jmeter.config.influxdb.VirtualUsersMeasurement;
 
@@ -47,6 +49,7 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 	private static final String KEY_RUN_ID = "runId";
 	private static final String KEY_NODE_NAME = "nodeName";
 	private static final String KEY_SAMPLERS_LIST = "samplersList";
+	private static final String KEY_SERVICE = "SERVICE";
 	private static final String KEY_RECORD_SUB_SAMPLES = "recordSubSamples";
 
 	/**
@@ -78,6 +81,11 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 	 * Name of the name
 	 */
 	private String nodeName;
+
+	/**
+	 * Name of the service
+	 */
+	private String service;
 
 	/**
 	 * List of samplers to record.
@@ -167,7 +175,70 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 				
 				
 				influxDB.write(influxDBConfig.getInfluxDatabase(), influxDBConfig.getInfluxRetentionPolicy(), point);
+
+
+				for (AssertionResult assertionResult : sampleResult.getAssertionResults()) {
+					if (assertionResult.isFailure()) {
+						errorMessages=errorMessages + assertionResult.getFailureMessage()+"; ";     
+					}
+				}
+
+				if (!errorMessages.equals("ERRORS:\n")){
+					sampleResult.setResponseMessage(errorMessages);	
+				}
 				
+				point = point = Point.measurement(SampleMeasurement.MEASUREMENT_NAME).time(sampleResult.getStartTime(), TimeUnit.MILLISECONDS)
+
+						.addField(SampleMeasurement.Fields.LABEL, sampleResult.getSampleLabel())
+						.addField(SampleMeasurement.Fields.SERVICE, service)
+						.addField(SampleMeasurement.Fields.TEST_NAME, sampleResult.getThreadName())
+						.addField(SampleMeasurement.Fields.NODE_NAME, nodeName)
+						.addField(SampleMeasurement.Fields.RESPONSE_CODE, sampleResult.getResponseCode())
+						.addField(SampleMeasurement.Fields.RESPONSE_MESSAGE, sampleResult.getResponseMessage())
+						.addField(SampleMeasurement.Fields.RESPONSE_SIZE, sampleResult.getBytesAsLong())
+						.addField(SampleMeasurement.Fields.RESPONSE_LATENCY, sampleResult.getLatency())
+						.addField("endTime", sampleResult.getEndTime()).build();
+
+						influxDB.write(influxDBConfig.getInfluxDatabase(), influxDBConfig.getInfluxRetentionPolicy(), point);
+
+
+
+				// String ResponseCode = escapeValue(sampleResult.getResponseCode())
+				// String ResponseMessage = escapeValue(sampleResult.getResponseMessage())
+				// String Latency = Long.toString(sampleResult.getLatency())
+				// String ResponseBytes = Long.toString(sampleResult.getBytesAsLong())
+				// String TimeStampNano = Long.toString(sampleResult.currentTimeInMillis()) + "000000"
+				// //String ResponseBytes = Long.toString(1000)                                   
+				// String Service=escapeValue(vars.get("SERVICE_NAME"))
+
+				// 			result.append("samples")
+				//   .append(",status=")
+				//   .append(Status)
+				//   .append(" ")
+				//   .append("service=\"")
+				//   .append(Service)
+				//   .append("\"")
+				//   .append(",testname=\"")
+				//   .append("${__threadGroupName}")
+				//   .append("\"")
+				//   .append(",nodename=\"")
+				//   .append("${__machineName()}")
+				//   .append("\"")
+				//   .append(",label=\"")
+				//   .append(Label)
+				//   .append("\"")
+				//   .append(",responsecode=")
+				//   .append(ResponseCode)
+				//   .append(",responsemessage=\"")
+				//   .append(ResponseMessage)
+				//   .append("\"")
+				//   .append(",latency=")
+				//   .append(Latency)
+				//   .append(",responsebytes=")
+				//   .append(ResponseBytes)
+				//   .append(" ")
+				//   .append(TimeStampNano)
+
 			}
 		}
 		
@@ -177,7 +248,7 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
             getUserMetrics().add(sampleResult);
 
 			if ((null != regexForSamplerList && sampleResult.getSampleLabel().matches(regexForSamplerList)) || samplersToFilter.contains(sampleResult.getSampleLabel())) {
-				Point point = Point.measurement(RequestMeasurement.HISTORY_MEASUTEMENT_NAME).time(
+				Point point = Point.measurement(RequestMeasurement.HISTORY_MEASUREMENT_NAME).time(
 						(sampleResult.getStartTime() - testStartTime) , TimeUnit.MILLISECONDS)
 	
 						.tag(RequestMeasurement.Tags.REQUEST_NAME, sampleResult.getSampleLabel())
@@ -213,6 +284,7 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 		arguments.addArgument(InfluxDBConfig.KEY_INFLUX_DB_DATABASE, InfluxDBConfig.DEFAULT_DATABASE);
 		arguments.addArgument(InfluxDBConfig.KEY_RETENTION_POLICY, InfluxDBConfig.DEFAULT_RETENTION_POLICY);
 		arguments.addArgument(KEY_SAMPLERS_LIST, ".*");
+		arguments.addArgument(KEY_SERVICE, "SERVICE");
 		arguments.addArgument(KEY_USE_REGEX_FOR_SAMPLER_LIST, "true");
 		arguments.addArgument(KEY_RECORD_SUB_SAMPLES, "true");
 		return arguments;
@@ -224,7 +296,8 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 		testName = context.getParameter(KEY_TEST_NAME, "Test");
                 runId = context.getParameter(KEY_RUN_ID,"R001"); //Will be used to compare performance of R001, R002, etc of 'Test'
 		randomNumberGenerator = new Random();
-		nodeName = context.getParameter(KEY_NODE_NAME, "Test-Node");
+		nodeName = context.getParameter(KEY_NODE_NAME, "Test-Node").split(" ")[0];
+		service = context.getParameter(KEY_SERVICE, "Test-Service");
 
 
 		setupInfluxClient(context);
