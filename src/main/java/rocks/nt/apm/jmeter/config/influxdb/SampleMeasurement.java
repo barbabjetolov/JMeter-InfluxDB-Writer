@@ -54,7 +54,7 @@ public interface SampleMeasurement {
 
         String NODE_NAME = "nodename";
 
-        String LABEL = "label"
+        String LABEL = "label";
         
         String SERVICE = "service";
 
