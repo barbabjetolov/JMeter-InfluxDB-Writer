@@ -88,6 +88,11 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 	private String service;
 
 	/**
+	 * Error messages from request or assertion
+	 */
+	private String errorMessages;
+
+	/**
 	 * List of samplers to record.
 	 */
 	private String samplersList = "";
