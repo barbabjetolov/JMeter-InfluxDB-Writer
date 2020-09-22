@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.jmeter.assertions.AssertionResult;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterContextService.ThreadCounts;
 import org.apache.jmeter.visualizers.backend.AbstractBackendListenerClient;
@@ -86,6 +87,11 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
 	 * Name of the service
 	 */
 	private String service;
+
+	/**
+	 * Jmeter Context
+	 */
+	private JMeterContext jmeterContext;
 
 	/**
 	 * Error messages from request or assertion
@@ -302,7 +308,8 @@ public class JMeterInfluxDBBackendListenerClient extends AbstractBackendListener
                 runId = context.getParameter(KEY_RUN_ID,"R001"); //Will be used to compare performance of R001, R002, etc of 'Test'
 		randomNumberGenerator = new Random();
 		nodeName = context.getParameter(KEY_NODE_NAME, "Test-Node").split(" ")[0];
-		service = context.getParameter(KEY_SERVICE, "Test-Service");
+
+		service = JMeterContextService.getContext().getVariables().get(KEY_SERVICE);
 
 
 		setupInfluxClient(context);
